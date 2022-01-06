@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "483230545547",
+    "project_id": "my-market-bd259",
+    "storage_bucket": "my-market-bd259.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:483230545547:android:3da30da1dd9c49471e068e",
+        "android_client_info": {
+          "package_name": "com.pragmaco.miscompras"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "483230545547-hfe91dfcri6obarfl2auto80m62dib2j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDuLBXQOqtVGaipeiwiTMhAmhIwTdnmHcc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "483230545547-hfe91dfcri6obarfl2auto80m62dib2j.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

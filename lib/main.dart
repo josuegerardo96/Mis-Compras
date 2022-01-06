@@ -1,12 +1,18 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mis_compras/helpers.dart';
+import 'package:mis_compras/helpers/helpers.dart';
+import 'package:mis_compras/helpers/sign_in.dart';
 import 'package:mis_compras/main_list.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
 
 
+Future main() async {
 
-void main(){
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(
     new MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -15,9 +21,9 @@ void main(){
   );
 
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-    systemNavigationBarColor: colorss.green,
-    statusBarColor: colorss.green,
-    statusBarIconBrightness: Brightness.dark,
+    systemNavigationBarColor: Colors.transparent,
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
     systemNavigationBarIconBrightness: Brightness.dark
   ));
 
@@ -35,64 +41,82 @@ class _main_screenState extends State<main_screen> {
 
 
   @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
+  Widget build(BuildContext context) => ChangeNotifierProvider(
+    create: (context) => Google_Sign_In(),
+    child: StreamBuilder(
+      stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot){
+
+          if(snapshot.connectionState == ConnectionState.waiting){
+            return Center(child: CircularProgressIndicator());
+          }else if(snapshot.hasError){
+            return Center(child: Text("Something went wrong"),);
+          }else if(snapshot.hasData){
+            return main_list();
+          }else{
+            return session_page(context);
+          }
+          
+        },
+    ),
+
+  );
 
 
-            login_image(),
 
-            GestureDetector(
-              onTap: (){
-                go_main_list();
-              },
-              child: Padding(
-                padding: EdgeInsets.only(top: 120),
-                child: Center(
-                  child: Container(
-                    width: 265,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: colorss.grey)
-                    ),
-              
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      child: Row(
-                        children: <Widget>[
-              
-                          Image.asset('assets/google.png', height: 30, width: 30,),
-                          SizedBox(width: 10,),
-                          Text(
-                            "Iniciar sesión con Google",
-                            style: GoogleFonts.amaranth(
-                              color: colorss.grey,
-                              fontSize: 18,
-                            ),
-                          )
-                        ],
-                      ),
+
+
+
+  Scaffold session_page(BuildContext context) {
+    return Scaffold(
+    body: SafeArea(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+      
+          login_image(),
+    
+          GestureDetector(
+            onTap: (){
+              final provider = Provider.of<Google_Sign_In>(context, listen: false);
+              provider.googleLogin();
+            },
+            child: Padding(
+              padding: EdgeInsets.only(top: 120),
+              child: Center(
+                child: Container(
+                  width: 265,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: colorss.grey)
+                  ),
+            
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    child: Row(
+                      children: <Widget>[
+            
+                        Image.asset('assets/google.png', height: 30, width: 30,),
+                        SizedBox(width: 10,),
+                        Text(
+                          "Iniciar sesión con Google",
+                          style: GoogleFonts.amaranth(
+                            color: colorss.grey,
+                            fontSize: 18,
+                          ),
+                        )
+                      ],
                     ),
                   ),
                 ),
               ),
-            )
-          ],
-        ),
-      )
-    );
+            ),
+          )
+        ],
+      ),
+    ),
+  );
   }
-
-
-
-  void go_main_list(){
-    Navigator.push(context, MaterialPageRoute(builder: (context) => main_list()));
-  }
-
 
 
 
