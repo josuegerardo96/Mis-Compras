@@ -5,7 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mis_compras/helpers/helpers.dart';
 import 'package:mis_compras/helpers/sign_in.dart';
 import 'package:mis_compras/helpers/size.dart';
-import 'package:mis_compras/main_list.dart';
+import 'package:mis_compras/helpers/the_provider.dart';
+import 'package:mis_compras/home.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 
@@ -54,8 +55,12 @@ class _main_screenState extends State<main_screen> {
 
 
   @override
-  Widget build(BuildContext context) => ChangeNotifierProvider(
-    create: (context) => Google_Sign_In(),
+  Widget build(BuildContext context) => MultiProvider(
+    providers: [
+        ChangeNotifierProvider<Carrito>(create: (context)=>Carrito()),
+        ChangeNotifierProvider<Google_Sign_In>(create: (context)=>Google_Sign_In()),
+      ],
+    //create: (context) => Google_Sign_In(),
     child: StreamBuilder(
       stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot){
@@ -64,7 +69,7 @@ class _main_screenState extends State<main_screen> {
           }else if(snapshot.hasError){
             return Center(child: Text("Something went wrong"),);
           }else if(snapshot.hasData){
-            return main_list();
+            return Home();
           }else{
             return session_page(context);
           }  

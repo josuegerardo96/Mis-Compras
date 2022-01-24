@@ -4,13 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mis_compras/DB/db.dart';
 import 'package:mis_compras/helpers/helpers.dart';
 import 'package:mis_compras/helpers/size.dart';
+import 'package:mis_compras/helpers/the_provider.dart';
 import 'package:mis_compras/objects/producto.dart';
-
-
+import 'package:provider/provider.dart';
 
 class master_list extends StatefulWidget {
-
-
   @override
   _master_listState createState() => _master_listState();
 }
@@ -19,209 +17,126 @@ class _master_listState extends State<master_list> {
   final user = FirebaseAuth.instance.currentUser!;
   TextEditingController txt = new TextEditingController();
   List<producto> productos = [];
-  
 
-  @override
-  void initState() {
-    cargar_lista();
-    super.initState();
+  Future<List<producto>> cargar_lista(BuildContext con) async {
+    final carrito = Provider.of<Carrito>(context);
+    if (carrito.getFullCarrito.isNotEmpty) {
+      return carrito.getFullCarrito;
+    } else {
+      return Provider.of<Carrito>(context).cargarFullCarrito;
+    }
   }
-
-  cargar_lista() async {
-    productos = await db().getListMaster();
-    setState(() {});
-  }
-
-
 
   @override
   Widget build(BuildContext context) {
     Size size = new Size(context: context);
+
+
+    
+
+
+    if (productos.isNotEmpty) {
+      productos = Provider.of<Carrito>(context).getFullCarrito;
+      return Final_fullList_screen(size);
+    } else {
+      return FutureBuilder(
+          future: cargar_lista(context),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            } else {
+              productos = snapshot.data as List<producto>;
+              return Final_fullList_screen(size);
+            }
+          });
+    }
+  }
+
+  Scaffold Final_fullList_screen(Size size) {
     return Scaffold(
-
-
       body: Container(
         child: SafeArea(
           child: Column(
-        
             children: <Widget>[
-        
+              SizedBox(
+                height: size.h(5),
+              ),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                padding: const EdgeInsets.only(left: 40, right: 40),
                 child: Row(
                   children: <Widget>[
-                    
-                    IconButton(
-                      onPressed: (){
-                        Navigator.pop(context);
-                      }, 
-                      icon: Icon(
-                        Icons.arrow_back_ios_new_outlined, 
-                        color: colorss.black,
-                        size: size.h(2),
-                      )
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text('Lista',
+                            style: GoogleFonts.amaranth(
+                              fontSize: size.h(2),
+                              color: colorss.black,
+                            )),
+                        SizedBox(
+                          height: 2,
+                        ),
+                        Text(
+                          'Total',
+                          style: GoogleFonts.amaranth(
+                            color: colorss.black,
+                            fontSize: size.h(4.6),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
-
-
-                    Spacer(),
-
-
+                    Spacer(
+                      flex: 3,
+                    ),
                     Text(
-                      "Lista maestra",
+                      productos
+                              .where((e) => e.getState == true)
+                              .toList()
+                              .length
+                              .toString() +
+                          ' / ' +
+                          productos.length.toString(),
                       style: GoogleFonts.amaranth(
-                        color: colorss.black,
+                        color: colorss.green,
                         fontSize: size.h(3.2),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
-
-                    Spacer(),
-
-                    IconButton(
-                      
-                      onPressed: (){
-                        if(productos.isNotEmpty){
-                          List<producto> enviar = [];
-                          for (producto p in productos) {
-                            if(p.getState==true){
-                              p.setState = false;
-                              enviar.add(p);
-                            }
-                          }
-
-                          if(enviar.isNotEmpty){
-                            db().insert(enviar);
-                          }
-                        }
-                        
-                      }, 
-                      icon: Icon(
-                        Icons.cloud_circle_outlined,
-                        color: colorss.black,
-                        size: size.h(3),
-                      ),
+                    Spacer(
+                      flex: 1,
                     ),
-
-
-                      
-
-                    
-
-
-
                   ],
                 ),
               ),
-
-
-
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    height: size.h(4.0),
-                    width: size.w(55),
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: colorss.grey),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: TextField(
-                      controller: txt,
-                      onChanged: (_) => setState(() {}),
-                      cursorColor: colorss.green,
-                      maxLength: 40,
-                      textAlign: TextAlign.center,
-                      decoration: InputDecoration(
-                        counterText: '',
-                        contentPadding: EdgeInsets.only(bottom: 17.5),
-                        border: InputBorder.none,
-                        
-                        hintText: "Agregar producto",
-                        hintStyle: GoogleFonts.roboto(
-                          fontSize: size.h(1.5),
-                          color: colorss.grey,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(width: 10,), 
-
-                  Container(
-                    height: size.h(3),
-                    width: size.h(3),
-                    decoration: BoxDecoration(
-                      color: colorss.green,
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: GestureDetector(
-                      onTap: (){
-                        if(txt.text.isNotEmpty){
-                          productos.add(producto(name: txt.text.trim(), state: false));
-                          db().insertMaster(productos);
-                          txt.text = "";
-                          setState(() {
-                            
-                          });
-                        }
-                        
-                      },
-                      child: Center(
-                        child: Icon(Icons.add, color: colorss.white, size: size.h(2),),
-                      ),
-                    ),
-                  ),
-
-
-
-
-                ],
+              SizedBox(
+                height: 20,
               ),
-
-
-
-              SizedBox(height: 20,),
-
-
               Expanded(
-              child: productos.length == 0
-                  ? empty()
-                  : ReorderableListView.builder(
-                      padding: EdgeInsets.only(
-                          bottom: kFloatingActionButtonMargin + 60),
-                      onReorder: (oldIndex, newIndex) => setState(() {
-                        final index =
-                            newIndex > oldIndex ? newIndex - 1 : newIndex;
-                        final p = productos.removeAt(oldIndex);
-                        productos.insert(index, p);
-                        db().insertMaster(productos);
-                      }),
-                      itemCount: productos.length,
-                      itemBuilder: (context, index) {
-                        return draw_product(index, productos[index], size);
-                      },
-                    ),
-            ),
-
-
-
-
-        
+                child: productos.length == 0
+                    ? empty()
+                    : ReorderableListView.builder(
+                        padding: EdgeInsets.only(
+                            bottom: kFloatingActionButtonMargin + 60),
+                        onReorder: (oldIndex, newIndex) => setState(() {
+                          final index =
+                              newIndex > oldIndex ? newIndex - 1 : newIndex;
+                          final p = productos.removeAt(oldIndex);
+                          productos.insert(index, p);
+                          db().insertMaster(productos);
+                        }),
+                        itemCount: productos.length,
+                        itemBuilder: (context, index) {
+                          return draw_product(index, productos[index], size);
+                        },
+                      ),
+              ),
             ],
           ),
         ),
       ),
-
-
     );
   }
-  
-
-
 
   Widget draw_product(int i, producto p, Size size) {
     return Padding(
@@ -230,28 +145,27 @@ class _master_listState extends State<master_list> {
       child: Row(
         children: <Widget>[
           GestureDetector(
-            onLongPress: (){
-              productos.removeAt(i);
-              db().getListMaster();
-              setState(() {});
-              db().insertMaster(productos);
-              
-            },
-            onTap: (){
-              if(productos[i].getState == true){
-                productos[i].setState = false;
-              }else{
-                productos[i].setState = true;
-              }
+            onLongPress: () {
               setState(() {
-                
+                productos.removeAt(i);
+                Provider.of<Carrito>(context, listen: false).setFullCarrito = productos;
+                db().insertMaster(productos);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text("Se eliminó el ${p.getName}", style: GoogleFonts.roboto(color: colorss.red)),
+                  duration: const Duration(seconds: 2),
+                ));
               });
               
             },
+            onTap: () {
+              setState(() {
+                p.setState = !p.getState;
+              });
+            },
             child: Icon(
               p.getState == false
-                  ? Icons.radio_button_unchecked_outlined
-                  : Icons.check_circle_outline_outlined,
+                  ? Icons.check_box_outline_blank_outlined
+                  : Icons.check_box_outlined,
               color: p.getState == false ? colorss.grey : colorss.green,
               size: size.h(2.5),
             ),
@@ -265,8 +179,7 @@ class _master_listState extends State<master_list> {
             child: Text(
               p.getName.toString(),
               style: GoogleFonts.roboto(
-                  fontSize: size.h(2.0),
-                  color: colorss.black),
+                  fontSize: size.h(2.0), color: colorss.black),
               overflow: TextOverflow.ellipsis,
             ),
           )),
@@ -275,15 +188,98 @@ class _master_listState extends State<master_list> {
     );
   }
 
+  _add_product(BuildContext context) {
+    TextEditingController texto = new TextEditingController();
+    texto.text = "";
+    Size size = new Size(context: context);
 
-
-
-
-
-
-
-
-
+    showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (
+          context,
+        ) {
+          return StatefulBuilder(
+              builder: (BuildContext context, StateSetter myState) {
+            return Padding(
+              padding: MediaQuery.of(context).viewInsets,
+              child: Container(
+                color: Color(0xff737373),
+                child: Container(
+                  height: size.h(20),
+                  decoration: BoxDecoration(
+                    color: colorss.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(10),
+                      topRight: Radius.circular(10),
+                    ),
+                  ),
+                  child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: MediaQuery.of(context).size.width * .65,
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 20, horizontal: 10),
+                              child: TextField(
+                                decoration: InputDecoration(
+                                    border: InputBorder.none,
+                                    counter: Offstage()),
+                                keyboardType: TextInputType.multiline,
+                                onChanged: (v) => myState(() {}),
+                                minLines: 1,
+                                maxLines: 2,
+                                maxLength: 35,
+                                controller: texto,
+                                autofocus: true,
+                                cursorColor: colorss.green,
+                                style: GoogleFonts.roboto(
+                                  color: colorss.black,
+                                  fontSize: size.h(1.6),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 5,
+                            ),
+                            Text(
+                              texto.text.length.toString() + '/35',
+                              style: GoogleFonts.roboto(
+                                color: colorss.grey,
+                                fontSize: size.h(1),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Align(
+                          alignment: Alignment.topCenter,
+                          child: Container(
+                            padding: EdgeInsets.only(top: 20, right: 10),
+                            width: MediaQuery.of(context).size.width * .35,
+                            child: GestureDetector(
+                              onTap: () {
+                                if (texto.text.isNotEmpty) {
+                                  productos.add(
+                                      producto(name: texto.text, state: false));
+                                  Navigator.pop(context);
+                                  setState(() {});
+                                  db().insert(productos);
+                                }
+                              },
+                              child: button_add(context),
+                            ),
+                          ),
+                        ),
+                      ]),
+                ),
+              ),
+            );
+          });
+        });
+  }
 
   Widget empty() {
     Size size = new Size(context: context);
@@ -315,15 +311,4 @@ class _master_listState extends State<master_list> {
       ),
     );
   }
-
-
-
-
-
-
-
-
-
-
-
 }

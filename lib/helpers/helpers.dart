@@ -197,7 +197,6 @@ Container Circle_Counter(
   if (total > 0) {
     rr = done / total;
   }
-
   return Container(
     height: hw + 2,
     width: hw + 2,

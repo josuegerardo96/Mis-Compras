@@ -29,7 +29,7 @@ class producto {
   set setName(String name) => this.name = name;
 
   get getState => this.state;
-  set setState( state) => this.state = state;
+  set setState(bool state) => this.state = state;
 
 
 
